@@ -9,9 +9,15 @@ from colorama import init, Fore
 from keep_alive import keep_alive
 
 init(autoreset=True)
-# 
+
 status = "idle"  # online/dnd/idle
-custom_status = "Owen"  # Custom Status
+custom_status_list = [
+    "例えば君が明日死ぬならl",
+    "僕は今から笑って飛び込めるだろう",
+    "二人以外の時間を想うと",
+    "どうしようもないほど胸が痛くなるよ",
+    "眠そうな目 強がる癖",
+]  # Danh sách các trạng thái sẽ xoay vòng
 
 usertoken = os.getenv("TOKEN")
 if not usertoken:
@@ -27,10 +33,9 @@ if validate.status_code != 200:
 
 userinfo = requests.get("https://canary.discordapp.com/api/v9/users/@me", headers=headers).json()
 username = userinfo["username"]
-discriminator = userinfo["discriminator"]
 userid = userinfo["id"]
 
-async def onliner(token, status):
+async def onliner(token, status, custom_status):
     async with websockets.connect("wss://gateway.discord.gg/?v=9&encoding=json") as ws:
         start = json.loads(await ws.recv())
         heartbeat = start["d"]["heartbeat_interval"]
@@ -59,23 +64,22 @@ async def onliner(token, status):
                         "state": custom_status,
                         "name": "Custom Status",
                         "id": "custom",
-                                #Uncomment the below lines if you want an emoji in the status
-                                "emoji": {
-                                    "name": ":Omen_Cry:",
-                                    "id": "1159446150747783188",
-                                    "animated": False,
-                                },
-                            }
-                        ],
+                        "emoji": {
+                            "name": ":Omen_Cry:",
+                            "id": "1159446150747783188",
+                            "animated": False,
+                        },
+                    }
+                ],
                 "status": status,
                 "afk": False,
             },
         }
         await ws.send(json.dumps(cstatus))
 
-        online = {"op": 1, "d": "None"}
-        await asyncio.sleep(heartbeat / 1000)
-        await ws.send(json.dumps(online))
+        while True:
+            await asyncio.sleep(heartbeat / 1000)
+            await ws.send(json.dumps({"op": 1, "d": None}))
 
 async def run_onliner():
     if platform.system() == "Windows":
@@ -83,9 +87,16 @@ async def run_onliner():
     else:
         os.system("clear")
     print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as {Fore.LIGHTBLUE_EX}{username} {Fore.WHITE}({userid})!")
+
+    index = 0
     while True:
-        await onliner(usertoken, status)
-        await asyncio.sleep(50)
+        current_status = custom_status_list[index % len(custom_status_list)]
+        try:
+            await onliner(usertoken, status, current_status)
+        except Exception as e:
+            print(f"{Fore.RED}[ERROR] {e}")
+        index += 1
+        await asyncio.sleep(30)  # Thay đổi trạng thái mỗi 30 giây
 
 keep_alive()
 asyncio.run(run_onliner())
