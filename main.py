@@ -10,7 +10,7 @@ from keep_alive import keep_alive
 
 init(autoreset=True)
 
-status = "online"  # online/dnd/idle
+status = "idle"  # online/dnd/idle
 custom_status = "Owen"  # Custom Status
 
 usertoken = os.getenv("TOKEN")
@@ -60,11 +60,11 @@ async def onliner(token, status):
                         "name": "Custom Status",
                         "id": "custom",
                                 #Uncomment the below lines if you want an emoji in the status
-                                #"emoji": {
-                                    #"name": "emoji name",
-                                    #"id": "emoji id",
-                                    #"animated": False,
-                                #},
+                                "emoji": {
+                                    "name": ":Omen_Cry:",
+                                    "id": "1159446150747783188",
+                                    "animated": False,
+                                },
                             }
                         ],
                 "status": status,
