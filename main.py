@@ -12,12 +12,41 @@ init(autoreset=True)
 
 status = "idle"  # online/dnd/idle
 custom_status_list = [
-    "例えば君が明日死ぬならl",
-    "僕は今から笑って飛び込めるだろう",
-    "二人以外の時間を想うと",
-    "どうしようもないほど胸が痛くなるよ",
-    "眠そうな目 強がる癖",
-]  # Danh sách các trạng thái sẽ xoay vòng
+    "Ví dụ như nếu ngày mai em chết đi",
+    "Thì ngay bây giờ anh cũng có thể mỉm cười lao theo",
+    "Chỉ cần nghĩ đến khoảng thời gian không có em",
+    "Là lồng ngực anh đau đớn đến mức không chịu nổi",
+    "Đôi mắt lúc buồn ngủ, thói quen hay tỏ ra mạnh mẽ",
+    "Cả giọng nói ngọt ngào khi ôm nhau",
+    "Tất cả, tất cả... anh chỉ muốn là người duy nhất có được em",
+    "Anh đau lắm, xin em đấy",
+    "Em thật tàn nhẫn... tàn nhẫn... tàn nhẫn quá rồi",
+    "Sự trừng phạt đã thối rữa một cách đẹp đẽ bên trong con người ích kỷ của em",
+    "Nghe anh đi, nghe anh đi, nghe anh đi...",
+    "Làm ơn hãy ôm anh thật dịu dàng, ôm anh thật dịu dàng...",
+    "Dù anh biết là chuyện này chẳng thể nào",
+    "Nhưng anh vẫn muốn giữ trọn tình yêu này cho riêng mình",
+    "Nếu trong đầu ai khác có hình bóng em",
+    "Anh sẽ nở nụ cười và nghiền nát tất cả",
+    "Cả thích lẫn ghét, cả đôi bàn tay có phần tròn trịa",
+    "Và cả lúc em nổi giận khi mặt bị làm bẩn",
+    "Tất cả, tất cả... chỉ cần là của riêng anh thôi",
+    "Anh đau lắm, xin em đấy",
+    "Em thật tàn nhẫn... tàn nhẫn... tàn nhẫn quá rồi",
+    "Tình yêu đã trở nên méo mó và xấu xí trong em mất rồi",
+    "Nghe anh đi, nghe anh đi, nghe anh đi...",
+    "Làm ơn hãy khóc thật nhiều, khóc thật nhiều cho anh...",
+    "Những ảo tưởng và ham muốn không phanh lại được nữa",
+    "Anh muốn làm tất cả những điều không thể nói ra",
+    "Dùng khuôn mặt dễ thương đó mà đánh anh đi",
+    "Phá hủy anh đi",
+    "Em thật tàn nhẫn... tàn nhẫn... tàn nhẫn quá rồi",
+    "Sự trừng phạt đã thối rữa một cách đẹp đẽ bên trong con người ích kỷ của em",
+    "Nghe anh đi, nghe anh đi, nghe anh đi...",
+    "Làm ơn hãy ôm anh thật dịu dàng, ôm anh thật dịu dàng...",
+    "Hãy phá hủy anh đi, phá hủy anh đi, phá hủy anh đi, phá hủy anh đi",
+    "Phá hủy anh đi, phá hủy anh đi, phá hủy anh đi, chính em hãy phá hủy anh đi"
+]
 
 usertoken = os.getenv("TOKEN")
 if not usertoken:
