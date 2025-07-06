@@ -9,7 +9,7 @@ from colorama import init, Fore
 from keep_alive import keep_alive
 
 init(autoreset=True)
-
+# 
 status = "idle"  # online/dnd/idle
 custom_status = "Owen"  # Custom Status
 
