@@ -64,7 +64,7 @@ custom_status_list = [
     " Hageshiku naite hageshiku naite (T_T)",
     " Ienai koto mo zenbu shitai yo (つ﹏⊂)",
     " Kawaii sono hyoujou de boku o nagutte (⊃｡•́‿•̀｡)⊃",
-    " Kowashite… kimi ga kowashite me >.<"
+    " Kowashite… kimi ga kowashite me >.<",
 
     
     " Bình yên kia ơi ^.^",
