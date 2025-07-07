@@ -3,21 +3,24 @@ import sys
 import json
 import asyncio
 import platform
+import random
 import requests
 import websockets
 from colorama import init, Fore
-from keep_alive import keep_alive
+from keep_alive import keep_alive  # Chạy nếu dùng Replit hoặc Railway, nếu không dùng thì có thể bỏ dòng này
 
 init(autoreset=True)
 
-status = "idle"  # online/dnd/idle
+status = "idle"  # online / dnd / idle
+
+# Danh sách custom status
 custom_status_list = [
     " If you were to die tomorrow ^_^",
     " I could laugh and jump in from now on ;)",
     " But thinking about the time without us :-(",
     " Makes my heart ache unbearably (╯︵╰,)",
     " Sleepy eyes, pretending to be strong ^_^;",
-    " Our voices turn sweet when we embrace (´｡• ᵕ •｡`)",
+    " Our voices turn sweet when we embrace (´｡• ᵕ •｡)",
     " Everything, everything, I want it just for me >w<",
     " It’s so hard, please… (ノ_<。)",
     " You're so unfair, so unfair, so unfair :-(",
@@ -41,7 +44,7 @@ custom_status_list = [
     " Break me… break me… you break me… (╯°□°）╯︵ ┻━┻",
 
 
-    " Tatoeba kimi ga ashita shinu nara (´；д；`)",
+    " Tatoeba kimi ga ashita shinu nara (´；д；)",
     " Boku wa ima kara waratte tobikomeru darou ^_^",
     " Futari igai no jikan o omou to (つ﹏⊂)",
     " Doushiyou mo nai hodo mune ga itakunaru yo ;_;",
@@ -52,10 +55,10 @@ custom_status_list = [
     " Kimi wa zurui zurui zurui hito da mou >:(",
     " Wagamama na kimi no naka de kirei ni kusatta batsu (⚆_⚆)",
     " Kiite kiite kiite kiite kiite kiite yo (((φ(◎ロ◎;)φ)))",
-    " Onegai yasashiku daite yasashiku daite (´｡• ᵕ •｡`)",
+    " Onegai yasashiku daite yasashiku daite (´｡• ᵕ •｡)",
     " Kono itoshisa o hitorijime shitai yo ^_~",
     " Kimi ga iru nara egao de tsubushite mawarou >:)",
-    " Sukoshi marui te mo kawaii (っ´ω`)っ",
+    " Sukoshi marui te mo kawaii (っ´ω)っ",
     " Chotto okoru tokoro mo suki >_<;",
     " Aijou wa kimi no naka de minikuku sodatta na :-(",
     " Hageshiku naite hageshiku naite (T_T)",
@@ -85,6 +88,19 @@ custom_status_list = [
 
 ]
 
+# Danh sách emoji (cả custom và unicode)
+emoji_list = [
+    {"name": ":Omen_Cool:", "id": "1159446145601388614", "animated": False},
+    {"name": ":Omen_Drink:", "id": "1159446161225171035", "animated": False},
+    {"name": ":Omen_Gun:", "id": "1159446167369809971", "animated": False},
+    {"name": ":Omen_Laugh:", "id": "1159446172663025674", "animated": False},
+    {"name": ":pnv_vlromen:", "id": "1030578509493571655", "animated": False},
+    {"name": ":Omen_Rage:", "id": "1159446183090065438", "animated": False},
+    {"name": ":omencatdancespray_valorant_gif_5:", "id": "1098605943777939456", "animated": True},
+    {"name": ":OwOmen:", "id": "938763834057961492", "animated": False},
+    {"name": ":pepeomen:", "id": "938761185820561419", "animated": False},
+]
+
 usertoken = os.getenv("TOKEN")
 if not usertoken:
     print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add a token inside Secrets.")
@@ -97,7 +113,7 @@ if validate.status_code != 200:
     print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Your token might be invalid. Please check it again.")
     sys.exit()
 
-userinfo = requests.get("https://canary.discordapp.com/api/v9/users/@me", headers=headers).json()
+userinfo = validate.json()
 username = userinfo["username"]
 userid = userinfo["id"]
 
@@ -120,6 +136,13 @@ async def onliner(token, status, custom_status):
         }
         await ws.send(json.dumps(auth))
 
+        # Random emoji
+        random_emoji = random.choice(emoji_list)
+        emoji_payload = (
+            random_emoji if random_emoji["id"]
+            else {"name": random_emoji["name"]}
+        )
+
         cstatus = {
             "op": 3,
             "d": {
@@ -130,11 +153,7 @@ async def onliner(token, status, custom_status):
                         "state": custom_status,
                         "name": "Custom Status",
                         "id": "custom",
-                        "emoji": {
-                            "name": ":Omen_Cry:",
-                            "id": "1159446150747783188",
-                            "animated": False,
-                        },
+                        "emoji": emoji_payload,
                     }
                 ],
                 "status": status,
@@ -162,7 +181,7 @@ async def run_onliner():
         except Exception as e:
             print(f"{Fore.RED}[ERROR] {e}")
         index += 1
-        await asyncio.sleep(30)  # Thay đổi trạng thái mỗi 30 giây
+        await asyncio.sleep(30)  # đổi status mỗi 30 giây
 
-keep_alive()
+keep_alive()  # Nếu không dùng host cần keep-alive (như Replit), bạn có thể comment dòng này
 asyncio.run(run_onliner())
