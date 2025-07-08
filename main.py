@@ -14,8 +14,7 @@ init(autoreset=True)
 status = "online"  # online / dnd / idle
 
 # Danh sách custom status
-custom_status_list = 
-[
+custom_status_list = [
   "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Ooooooooooooooo reeeeeeeeeeeeeee!!!",
   ">w< Oreoooooooooooooo reeeeeeeeeeeeeee~",
   "(つ﹏⊂) Oooooo... o re... oooooooooreeeee...",
@@ -55,7 +54,7 @@ custom_status_list =
   "(╯°□°）╯︵ ┻━┻ Ore re?! Ore ore re re!!",
   "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Re ore re ore... o re!",
   "(°◡°♡) Ore, o re, re ore, ore re",
-  "(ﾉ≧ڡ≦) Re o re o re ore o re o re re!!"
+  "(ﾉ≧ڡ≦) Re o re o re ore o re o re re!!",
 ]
 # custom_status_list = [
 #     " If you were to die tomorrow ^_^",
