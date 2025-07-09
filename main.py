@@ -15,6 +15,13 @@ status = "online"  # online / dnd / idle
 
 # Danh sách custom status
 custom_status_list = [
+  "(≧◡≦)",
+  ">w<",
+  "ಥ‿ಥ",
+  "(つ﹏⊂)",
+  "(•ˋ _ ˊ•)",
+  "(>'-'<)"
+  
   # "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Ooooooooooooooo reeeeeeeeeeeeeee!!!",
   # ">w< Oreoooooooooooooo reeeeeeeeeeeeeee~",
   # "(つ﹏⊂) Oooooo... o re... oooooooooreeeee...",
@@ -55,76 +62,76 @@ custom_status_list = [
   # "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Re ore re ore... o re!",
   # "(°◡°♡) Ore, o re, re ore, ore re",
   # "(ﾉ≧ڡ≦) Re o re o re ore o re o re re!!",
-   "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Your morning eyes, I could stare like watching stars",
-  "(•́ ͜ʖ •̀) u i i a i i i a a i i",
+ #   "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Your morning eyes, I could stare like watching stars",
+ #  "(•́ ͜ʖ •̀) u i i a i i i a a i i",
 
-  ">w< I could walk you by, and I'll tell without a thought",
-  "(⌒‿⌒) u i u i i a u a i i",
+ #  ">w< I could walk you by, and I'll tell without a thought",
+ #  "(⌒‿⌒) u i u i i a u a i i",
 
-  "(つ﹏⊂) You'd be mine, would you mind if I took your hand tonight?",
-  "(＾◡＾)っ o re u i i a o re u i a",
+ #  "(つ﹏⊂) You'd be mine, would you mind if I took your hand tonight?",
+ #  "(＾◡＾)っ o re u i i a o re u i a",
 
-  "(⌒‿⌒) Know you're all that I want this life",
-  "(☆▽☆) i i i a i i u i a a",
- " ₍^. .^₎⟆  ♪  u i ii a",
-  "(≧◡≦) I'll imagine we fell in love",
-  "(⁄ ⁄•⁄ω⁄•⁄ ⁄) u i u i a u i i i a a",
+ #  "(⌒‿⌒) Know you're all that I want this life",
+ #  "(☆▽☆) i i i a i i u i a a",
+ # " ₍^. .^₎⟆  ♪  u i ii a",
+ #  "(≧◡≦) I'll imagine we fell in love",
+ #  "(⁄ ⁄•⁄ω⁄•⁄ ⁄) u i u i a u i i i a a",
 
-  "(°◡°♡) I'll nap under moonlight skies with you",
-  "(｡•́︿•̀｡) i a i a u u i a i i",
+ #  "(°◡°♡) I'll nap under moonlight skies with you",
+ #  "(｡•́︿•̀｡) i a i a u u i a i i",
 
-  "(⁄ ⁄>⁄ω⁄<⁄ ⁄) I think I'll picture us, you with the waves",
-  "(つ﹏⊂) a u i i o re o re i i a",
+ #  "(⁄ ⁄>⁄ω⁄<⁄ ⁄) I think I'll picture us, you with the waves",
+ #  "(つ﹏⊂) a u i i o re o re i i a",
 
-  "(⌒ω⌒) The ocean's colors on your face",
-  "(•́ ͜ʖ •̀) u i u i i a i u i a",
+ #  "(⌒ω⌒) The ocean's colors on your face",
+ #  "(•́ ͜ʖ •̀) u i u i i a i u i a",
 
-  "(づ｡◕‿‿◕｡)づ I'll leave my heart with your air",
-  "(((o(*ﾟ▽ﾟ*)o))) o re o re u i a a a i i",
+ #  "(づ｡◕‿‿◕｡)づ I'll leave my heart with your air",
+ #  "(((o(*ﾟ▽ﾟ*)o))) o re o re u i a a a i i",
 
-  ">w< So let me fly with you",
-  "(´｡• ω •｡`) u u i a i i i a o re",
+ #  ">w< So let me fly with you",
+ #  "(´｡• ω •｡`) u u i a i i i a o re",
 
-  "(((o(*ﾟ▽ﾟ*)o))) Will you be forever with me?",
-  "(⌒‿⌒) u i a i u i i a i a",
+ #  "(((o(*ﾟ▽ﾟ*)o))) Will you be forever with me?",
+ #  "(⌒‿⌒) u i a i u i i a i a",
 
-  " ₍^. .^₎⟆  ♪  u i ii a",
-  "(;´༎ຶД༎ຶ`) My love will always stay by you",
-  "(｡•́︿•̀｡) i i i a u i a u a i",
+ #  " ₍^. .^₎⟆  ♪  u i ii a",
+ #  "(;´༎ຶД༎ຶ`) My love will always stay by you",
+ #  "(｡•́︿•̀｡) i i i a u i a u a i",
 
-  "(•́ ͜ʖ •̀) I'll keep it safe, so don't you worry a thing",
-  "(つ﹏⊂) o re u i u i a o o a i a",
+ #  "(•́ ͜ʖ •̀) I'll keep it safe, so don't you worry a thing",
+ #  "(つ﹏⊂) o re u i u i a o o a i a",
 
-  "(＾◡＾)っ I'll tell you I love you more",
-  "(⁄ ⁄•⁄ω⁄•⁄ ⁄) a a u i i a i i a u",
+ #  "(＾◡＾)っ I'll tell you I love you more",
+ #  "(⁄ ⁄•⁄ω⁄•⁄ ⁄) a a u i i a i i a u",
 
-  "(*≧ω≦) It's stuck with you forever, so promise you won't let it go",
-  "(☆▽☆) u i a i u i u i a i i a",
+ #  "(*≧ω≦) It's stuck with you forever, so promise you won't let it go",
+ #  "(☆▽☆) u i a i u i u i a i i a",
 
-  "(°ロ°)☝ I'll trust the universe will always bring me to you",
-  "(⌒ω⌒) u i o re u i u i a o re a",
+ #  "(°ロ°)☝ I'll trust the universe will always bring me to you",
+ #  "(⌒ω⌒) u i o re u i u i a o re a",
 
- " ₍^. .^₎⟆  ♪  u i ii a",
-  "ಥ‿ಥ I'll imagine we fell in love",
-  "(•́ ͜ʖ •̀) u i u i u i i a i i",
+ # " ₍^. .^₎⟆  ♪  u i ii a",
+ #  "ಥ‿ಥ I'll imagine we fell in love",
+ #  "(•́ ͜ʖ •̀) u i u i u i i a i i",
 
-  "( ´•̥̥̥ω•̥̥̥` ) I'll nap under moonlight skies with you",
-  "(≧◡≦) u u a i i o re o re i i",
+ #  "( ´•̥̥̥ω•̥̥̥` ) I'll nap under moonlight skies with you",
+ #  "(≧◡≦) u u a i i o re o re i i",
 
-  "(☆▽☆) I think I'll picture us, you with the waves",
-  "(づ｡◕‿‿◕｡) a i i u i a o re u u i",
+ #  "(☆▽☆) I think I'll picture us, you with the waves",
+ #  "(づ｡◕‿‿◕｡) a i i u i a o re u u i",
 
-  ">w< The ocean's colors on your face",
-  "(＾◡＾)っ u i a i u u u i a i",
+ #  ">w< The ocean's colors on your face",
+ #  "(＾◡＾)っ u i a i u u u i a i",
 
-  "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ I'll leave my heart with your air",
-  "(つ﹏⊂) i a i a i a o re i i",
+ #  "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ I'll leave my heart with your air",
+ #  "(つ﹏⊂) i a i a i a o re i i",
 
-  "(｡•́︿•̀｡) So let me fly with you",
-  "(⁄ ⁄>⁄ω⁄<⁄ ⁄) o re o re u i u i a a",
- " ₍^. .^₎⟆  ♪  u i ii a",
-  "(•́ ͜ʖ •̀) Will you be forever with me?",
-  "(•́ ͜ʖ •̀) a i u i i a i i a u i",
+ #  "(｡•́︿•̀｡) So let me fly with you",
+ #  "(⁄ ⁄>⁄ω⁄<⁄ ⁄) o re o re u i u i a a",
+ # " ₍^. .^₎⟆  ♪  u i ii a",
+ #  "(•́ ͜ʖ •̀) Will you be forever with me?",
+ #  "(•́ ͜ʖ •̀) a i u i i a i i a u i",
 ]
 # custom_status_list = [
 #     " If you were to die tomorrow ^_^",
