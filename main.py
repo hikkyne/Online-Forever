@@ -11,7 +11,7 @@ from keep_alive import keep_alive  # Chạy nếu dùng Replit hoặc Railway, n
 
 init(autoreset=True)
 
-status = "online"  # online / dnd / idle
+status = "idle"  # online / dnd / idle
 
 # Danh sách custom status
 custom_status_list = [
