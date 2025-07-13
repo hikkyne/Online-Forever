@@ -313,7 +313,7 @@ async def run_onliner():
     else:
         os.system("clear")
     print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as {Fore.LIGHTBLUE_EX}{username} {Fore.WHITE}({userid})!")
-    onliner(usertoken, status)
+    await onliner(usertoken, status)
     # index = 0
     # while True:
     #     current_status = custom_status_list[index % len(custom_status_list)]
