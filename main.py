@@ -11,7 +11,7 @@ from keep_alive import keep_alive
 init(autoreset=True)
 
 status = "idle"  # online/dnd/idle
-custom_status = " "  # Custom Status
+custom_status = ""  # Custom Status
 
 usertoken = os.getenv("TOKEN")
 if not usertoken:
@@ -56,13 +56,12 @@ async def onliner(token, status):
                 "activities": [
                     {
                         "type": 4,
-                        "state": custom_status,
+                        "state": custom_status[:128],
                         "name": "Custom Status",
                         "id": "custom",
-                          
                                 "emoji": {
                                     "name": ":omencatdancespray_valorant_gif_5:",
-                                    "id": "1098605943777939456",
+                                    "id": "1364244170369400942",
                                     "animated": True,
                                 },
                             }
