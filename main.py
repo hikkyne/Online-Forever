@@ -235,11 +235,7 @@ custom_status_list = [
 
 # Danh sách emoji (cả custom và unicode)
 emoji_list = [
-    {"name": ":Omen_Drink:", "id": "1159446161225171035", "animated": False},
-    {"name": ":Omen_Rage:", "id": "1159446183090065438", "animated": False},
     {"name": ":omencatdancespray_valorant_gif_5:", "id": "1098605943777939456", "animated": True},
-    {"name": ":OwOmen:", "id": "938763834057961492", "animated": False},
-    {"name": ":pepeomen:", "id": "938761185820561419", "animated": False}
 ]
 
 usertoken = os.getenv("TOKEN")
