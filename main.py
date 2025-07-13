@@ -59,11 +59,11 @@ async def onliner(token, status):
                         "state": custom_status[:128],
                         "name": "Custom Status",
                         "id": "custom",
-                                "emoji": {
-                                    "name": ":omencatdancespray_valorant_gif_5:",
-                                    "id": "1364244170369400942",
-                                    "animated": True,
-                                },
+                                # "emoji": {
+                                #     "name": ":omencatdancespray_valorant_gif_5:",
+                                #     "id": "1364244170369400942",
+                                #     "animated": True,
+                                # },
                             }
                         ],
                 "status": status,
