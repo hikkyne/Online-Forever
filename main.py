@@ -235,11 +235,7 @@ custom_status_list = [
 
 # Danh sách emoji (cả custom và unicode)
 emoji_list = [
-    {"name": ":Omen_Cool:", "id": "1159446145601388614", "animated": False},
     {"name": ":Omen_Drink:", "id": "1159446161225171035", "animated": False},
-    {"name": ":Omen_Gun:", "id": "1159446167369809971", "animated": False},
-    {"name": ":Omen_Laugh:", "id": "1159446172663025674", "animated": False},
-    {"name": ":pnv_vlromen:", "id": "1030578509493571655", "animated": False},
     {"name": ":Omen_Rage:", "id": "1159446183090065438", "animated": False},
     {"name": ":omencatdancespray_valorant_gif_5:", "id": "1098605943777939456", "animated": True},
     {"name": ":OwOmen:", "id": "938763834057961492", "animated": False},
@@ -317,16 +313,16 @@ async def run_onliner():
     else:
         os.system("clear")
     print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as {Fore.LIGHTBLUE_EX}{username} {Fore.WHITE}({userid})!")
-
-    index = 0
-    while True:
-        current_status = custom_status_list[index % len(custom_status_list)]
-        try:
-            await onliner(usertoken, status, current_status)
-        except Exception as e:
-            print(f"{Fore.RED}[ERROR] {e}")
-        index += 1
-        await asyncio.sleep(30)  # đổi status mỗi 30 giây
+    onliner(usertoken, status, current_status)
+    # index = 0
+    # while True:
+    #     current_status = custom_status_list[index % len(custom_status_list)]
+    #     try:
+    #         await onliner(usertoken, status, current_status)
+    #     except Exception as e:
+    #         print(f"{Fore.RED}[ERROR] {e}")
+    #     index += 1
+    #     await asyncio.sleep(30)  # đổi status mỗi 30 giây
 
 # keep_alive()  # Nếu không dùng host cần keep-alive (như Replit), bạn có thể comment dòng này
 asyncio.run(run_onliner())
