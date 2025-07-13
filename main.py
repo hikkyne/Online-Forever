@@ -243,10 +243,7 @@ emoji_list = [
     {"name": ":Omen_Rage:", "id": "1159446183090065438", "animated": False},
     {"name": ":omencatdancespray_valorant_gif_5:", "id": "1098605943777939456", "animated": True},
     {"name": ":OwOmen:", "id": "938763834057961492", "animated": False},
-    {"name": ":pepeomen:", "id": "938761185820561419", "animated": False},
-    {"name": ":meguuusad:", "id": "795804879402565726", "animated": False},
-    {"name": ":bocchisad:", "id": "636320419305095199", "animated": False},
-      {"name": ":amuugu:", "id": "590941044724596757", "animated": True},
+    {"name": ":pepeomen:", "id": "938761185820561419", "animated": False}
 ]
 
 usertoken = os.getenv("TOKEN")
@@ -298,7 +295,7 @@ async def onliner(token, status, custom_status):
                 "activities": [
                     {
                         "type": 4,
-                        # "state": " ",
+                        "state": "_-_",
                         "name": "Custom Status",
                         "id": "custom",
                         "emoji": emoji_payload,
