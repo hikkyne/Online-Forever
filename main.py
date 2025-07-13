@@ -258,7 +258,7 @@ userinfo = validate.json()
 username = userinfo["username"]
 userid = userinfo["id"]
 
-async def onliner(token, status, custom_status):
+async def onliner(token, status):
     async with websockets.connect("wss://gateway.discord.gg/?v=9&encoding=json") as ws:
         start = json.loads(await ws.recv())
         heartbeat = start["d"]["heartbeat_interval"]
@@ -313,7 +313,7 @@ async def run_onliner():
     else:
         os.system("clear")
     print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as {Fore.LIGHTBLUE_EX}{username} {Fore.WHITE}({userid})!")
-    onliner(usertoken, status, current_status)
+    onliner(usertoken, status)
     # index = 0
     # while True:
     #     current_status = custom_status_list[index % len(custom_status_list)]
