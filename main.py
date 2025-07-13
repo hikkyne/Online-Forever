@@ -287,7 +287,7 @@ async def onliner(token, status):
                 "activities": [
                     {
                         "type": 4,
-          
+                        "state": "",
                         "name": "Custom Status",
                         "id": "custom",
                         "emoji": emoji_payload,
