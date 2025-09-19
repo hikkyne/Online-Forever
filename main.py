@@ -1,3 +1,4 @@
+# main.py
 import os
 import sys
 import json
@@ -6,86 +7,136 @@ import platform
 import requests
 import websockets
 from colorama import init, Fore
-from keep_alive import keep_alive
+from keep_alive import keep_alive  # nếu bạn đang dùng keep_alive riêng, giữ import này
 
 init(autoreset=True)
 
-status = "online"  # online/dnd/idle
-custom_status = "youtube.com/@SealedSaucer"  # Custom Status
+# ========= Cấu hình =========
+STATUS = "idle"                     # online | dnd | idle | invisible
+CUSTOM_STATUS = ""               # custom status ngắn
+GATEWAY_URL = "wss://gateway.discord.gg/?v=10&encoding=json"
+REST_BASE    = "https://discord.com/api/v9"
 
-usertoken = os.getenv("TOKEN")
-if not usertoken:
-    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add a token inside Secrets.")
-    sys.exit()
+# ========= Token =========
+TOKEN = os.getenv("TOKEN")
+if not TOKEN:
+    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add TOKEN in environment variables.")
+    sys.exit(1)
 
-headers = {"Authorization": usertoken, "Content-Type": "application/json"}
+headers = {"Authorization": TOKEN, "Content-Type": "application/json"}
 
-validate = requests.get("https://canary.discordapp.com/api/v9/users/@me", headers=headers)
+# Validate token
+validate = requests.get(f"{REST_BASE}/users/@me", headers=headers)
 if validate.status_code != 200:
     print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Your token might be invalid. Please check it again.")
-    sys.exit()
+    sys.exit(1)
 
-userinfo = requests.get("https://canary.discordapp.com/api/v9/users/@me", headers=headers).json()
-username = userinfo["username"]
-discriminator = userinfo["discriminator"]
-userid = userinfo["id"]
+userinfo = validate.json()
+username = userinfo.get("username", "unknown")
+userid   = userinfo.get("id", "unknown")
 
-async def onliner(token, status):
-    async with websockets.connect("wss://gateway.discord.gg/?v=9&encoding=json") as ws:
-        start = json.loads(await ws.recv())
-        heartbeat = start["d"]["heartbeat_interval"]
+# ========= Gateway helpers =========
+async def op_send(ws, payload: dict):
+    """Gửi payload an toàn (tránh >1MB)."""
+    data = json.dumps(payload, separators=(",", ":"))
+    if len(data) > 800_000:
+        # Không bao giờ nên xảy ra với heartbeat/presence
+        print(f"{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Blocked oversized payload len={len(data)}")
+        return
+    await ws.send(data)
 
-        auth = {
-            "op": 2,
-            "d": {
-                "token": token,
-                "properties": {
-                    "$os": "Windows 10",
-                    "$browser": "Google Chrome",
-                    "$device": "Windows",
-                },
-                "presence": {"status": status, "afk": False},
+async def identify(ws):
+    # OP 2 IDENTIFY
+    payload = {
+        "op": 2,
+        "d": {
+            "token": TOKEN,
+            "properties": {
+                "$os": platform.system(),
+                "$browser": "chrome",
+                "$device": "desktop",
             },
-        }
-        await ws.send(json.dumps(auth))
+            "presence": {"status": STATUS, "afk": False},
+            "compress": False,
+        },
+    }
+    await op_send(ws, payload)
 
-        cstatus = {
-            "op": 3,
-            "d": {
-                "since": 0,
-                "activities": [
-                    {
-                        "type": 4,
-                        "state": custom_status,
-                        "name": "Custom Status",
-                        "id": "custom",
-                                #Uncomment the below lines if you want an emoji in the status
-                                #"emoji": {
-                                    #"name": "emoji name",
-                                    #"id": "emoji id",
-                                    #"animated": False,
-                                #},
-                            }
-                        ],
-                "status": status,
-                "afk": False,
-            },
-        }
-        await ws.send(json.dumps(cstatus))
+async def set_custom_status(ws):
+    # OP 3 PRESENCE UPDATE (type 4 = Custom Status, chỉ có trên tài khoản user)
+    payload = {
+        "op": 3,
+        "d": {
+            "since": 0,
+            "activities": [
+                {
+                    "type": 4,
+                    "state": CUSTOM_STATUS,
+                    "name": "Custom Status",
+                    "id": "custom",
+                }
+            ],
+            "status": STATUS,
+            "afk": False,
+        },
+    }
+    await op_send(ws, payload)
 
-        online = {"op": 1, "d": "None"}
-        await asyncio.sleep(heartbeat / 1000)
-        await ws.send(json.dumps(online))
+async def heartbeat_loop(ws, interval_ms: int):
+    """Gửi heartbeat đều đặn. d phải là None (null), KHÔNG phải chuỗi 'None'."""
+    try:
+        while True:
+            await asyncio.sleep(interval_ms / 1000)
+            await op_send(ws, {"op": 1, "d": None})
+    except asyncio.CancelledError:
+        pass
 
-async def run_onliner():
-    if platform.system() == "Windows":
-        os.system("cls")
-    else:
-        os.system("clear")
-    print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as {Fore.LIGHTBLUE_EX}{username} {Fore.WHITE}({userid})!")
+async def onliner():
+    """Kết nối gateway, identify, đặt custom status, chạy heartbeat + nhận sự kiện."""
+    backoff = 1
     while True:
-        await onliner(usertoken, status)
-        await asyncio.sleep(50)
+        try:
+            async with websockets.connect(
+                GATEWAY_URL,
+                max_size=2**20,      # inbound limit (1MB)
+                ping_interval=20,
+                ping_timeout=20,
+            ) as ws:
+                # Nhận HELLO (OP 10)
+                hello = json.loads(await ws.recv())
+                heartbeat_interval = hello["d"]["heartbeat_interval"]
 
-keep_alive()
-asyncio.run(run_onliner())
+                # Identify & đặt custom status
+                await identify(ws)
+                await set_custom_status(ws)
+
+                # In thông tin đăng nhập
+                print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as "
+                      f"{Fore.LIGHTBLUE_EX}{username}{Fore.WHITE} ({userid}) – "
+                      f"status: {STATUS}, custom: '{CUSTOM_STATUS}'")
+
+                # Chạy heartbeat song song
+                hb_task = asyncio.create_task(heartbeat_loop(ws, heartbeat_interval))
+
+                # Lắng nghe sự kiện từ gateway (KHÔNG gửi lại, KHÔNG in payload lớn)
+                async for _ in ws:
+                    pass  # giữ kết nối, không xử lý gì thêm
+
+                hb_task.cancel()
+
+        except Exception as e:
+            print(f"{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Gateway error: {e}")
+
+        # Reconnect với backoff
+        await asyncio.sleep(backoff)
+        backoff = min(backoff * 2, 60)
+
+async def main():
+    try:
+        keep_alive()
+    except Exception:
+        pass
+    await onliner()
+
+if __name__ == "__main__":
+    asyncio.run(main())
