@@ -13,14 +13,20 @@ init(autoreset=True)
 
 # ========= Cấu hình =========
 STATUS = "idle"                     # online | dnd | idle | invisible
-CUSTOM_STATUS = "zzz"               # custom status ngắn
+CUSTOM_STATUS = "Chơi vơi"               # custom status text (ngắn)
 GATEWAY_URL = "wss://gateway.discord.gg/?v=10&encoding=json"
 REST_BASE    = "https://discord.com/api/v9"
 
-# ========= Token =========
+# ========= Env =========
 TOKEN = os.getenv("TOKEN")
+EMOJI_ID = os.getenv("EMOJI_ID")  # <-- BẮT BUỘC có
+EMOJI_ANIMATED = os.getenv("EMOJI_ANIMATED", "false").lower() == "true"
+
 if not TOKEN:
     print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add TOKEN in environment variables.")
+    sys.exit(1)
+if not EMOJI_ID:
+    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add EMOJI_ID in environment variables.")
     sys.exit(1)
 
 headers = {"Authorization": TOKEN, "Content-Type": "application/json"}
@@ -40,7 +46,6 @@ async def op_send(ws, payload: dict):
     """Gửi payload an toàn (tránh >1MB)."""
     data = json.dumps(payload, separators=(",", ":"))
     if len(data) > 800_000:
-        # Không bao giờ nên xảy ra với heartbeat/presence
         print(f"{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Blocked oversized payload len={len(data)}")
         return
     await ws.send(data)
@@ -63,7 +68,8 @@ async def identify(ws):
     await op_send(ws, payload)
 
 async def set_custom_status(ws):
-    # OP 3 PRESENCE UPDATE (type 4 = Custom Status, chỉ có trên tài khoản user)
+    # OP 3 PRESENCE UPDATE (type 4 = Custom Status)
+    # Với emoji custom: chỉ dùng ID; "name" để None (null). Nếu emoji animated, đặt animated=True.
     payload = {
         "op": 3,
         "d": {
@@ -74,6 +80,11 @@ async def set_custom_status(ws):
                     "state": CUSTOM_STATUS,
                     "name": "Custom Status",
                     "id": "custom",
+                    "emoji": {
+                        "name": None,                # không cần name, chỉ dùng id
+                        "id": EMOJI_ID,              # <-- ID emoji custom
+                        "animated": EMOJI_ANIMATED,  # true nếu là <a:...:id>
+                    },
                 }
             ],
             "status": STATUS,
@@ -83,7 +94,7 @@ async def set_custom_status(ws):
     await op_send(ws, payload)
 
 async def heartbeat_loop(ws, interval_ms: int):
-    """Gửi heartbeat đều đặn. d phải là None (null), KHÔNG phải chuỗi 'None'."""
+    """Gửi heartbeat đều đặn. d phải là None (null)."""
     try:
         while True:
             await asyncio.sleep(interval_ms / 1000)
@@ -110,17 +121,18 @@ async def onliner():
                 await identify(ws)
                 await set_custom_status(ws)
 
-                # In thông tin đăng nhập
-                print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as "
-                      f"{Fore.LIGHTBLUE_EX}{username}{Fore.WHITE} ({userid}) – "
-                      f"status: {STATUS}, custom: '{CUSTOM_STATUS}'")
+                print(
+                    f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as "
+                    f"{Fore.LIGHTBLUE_EX}{username}{Fore.WHITE} ({userid}) – "
+                    f"status: {STATUS}, custom: '{CUSTOM_STATUS}', emoji_id: {EMOJI_ID}, animated={EMOJI_ANIMATED}"
+                )
 
                 # Chạy heartbeat song song
                 hb_task = asyncio.create_task(heartbeat_loop(ws, heartbeat_interval))
 
                 # Lắng nghe sự kiện từ gateway (KHÔNG gửi lại, KHÔNG in payload lớn)
                 async for _ in ws:
-                    pass  # giữ kết nối, không xử lý gì thêm
+                    pass
 
                 hb_task.cancel()
 
@@ -132,14 +144,11 @@ async def onliner():
         backoff = min(backoff * 2, 60)
 
 async def main():
-    # Nếu bạn có hàm keep_alive() riêng để chạy web server healthcheck thì gọi ở đây
     try:
-        keep_alive()
+        keep_alive()  # nếu bạn có web healthcheck riêng
     except Exception:
-        # Nếu không có hoặc không cần, bỏ qua
         pass
 
-    # Xoá clear screen để log Railway không bị mất
     await onliner()
 
 if __name__ == "__main__":
