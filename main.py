@@ -1,56 +1,53 @@
 # main.py
-import os, sys, json, asyncio, platform, requests, websockets
+import os
+import sys
+import json
+import asyncio
+import platform
+import requests
+import websockets
 from colorama import init, Fore
-from flask import Flask
-from threading import Thread
+from keep_alive import keep_alive  # nếu bạn đang dùng keep_alive riêng, giữ import này
 
 init(autoreset=True)
 
-STATUS = "idle"            # online | dnd | idle | invisible
-CUSTOM_STATUS = "zzz"      # chữ ngắn
+# ========= Cấu hình =========
+STATUS = "idle"                     # online | dnd | idle | invisible
+CUSTOM_STATUS = "zzz"               # custom status ngắn
 GATEWAY_URL = "wss://gateway.discord.gg/?v=10&encoding=json"
-REST_BASE   = "https://discord.com/api/v9"
+REST_BASE    = "https://discord.com/api/v9"
 
+# ========= Token =========
 TOKEN = os.getenv("TOKEN")
 if not TOKEN:
-    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add TOKEN in Railway Variables.")
+    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add TOKEN in environment variables.")
     sys.exit(1)
+
+headers = {"Authorization": TOKEN, "Content-Type": "application/json"}
 
 # Validate token
-headers = {"Authorization": TOKEN, "Content-Type": "application/json"}
-r = requests.get(f"{REST_BASE}/users/@me", headers=headers)
-if r.status_code != 200:
-    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Your token might be invalid.")
+validate = requests.get(f"{REST_BASE}/users/@me", headers=headers)
+if validate.status_code != 200:
+    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Your token might be invalid. Please check it again.")
     sys.exit(1)
-me = r.json()
-username = me.get("username", "unknown")
-userid   = me.get("id", "unknown")
 
-# ---- Flask keep-alive (một bản duy nhất) ----
-app = Flask(__name__)
+userinfo = validate.json()
+username = userinfo.get("username", "unknown")
+userid   = userinfo.get("id", "unknown")
 
-@app.get("/")
-def root():
-    return '<meta http-equiv="refresh" content="0; URL=https://phantom.fr.to/support"/>'
-
-def run_flask():
-    port = int(os.environ.get("PORT", "8080"))
-    app.run(host="0.0.0.0", port=port)
-
-def start_keep_alive():
-    Thread(target=run_flask, daemon=True).start()
-
-# ---- Discord Gateway helpers ----
+# ========= Gateway helpers =========
 async def op_send(ws, payload: dict):
-    data = json.dumps(payload)
-    # Phòng sự cố: KHÔNG BAO GIỜ gửi khối > 1MB
+    """Gửi payload an toàn (tránh >1MB)."""
+    data = json.dumps(payload, separators=(",", ":"))
     if len(data) > 800_000:
-        print(f"{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] BLOCKED sending payload > 800KB (len={len(data)})")
+        # Không bao giờ nên xảy ra với heartbeat/presence
+        print(f"{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Blocked oversized payload len={len(data)}")
         return
     await ws.send(data)
 
 async def identify(ws):
-    await op_send(ws, {
+    # OP 2 IDENTIFY
+    payload = {
         "op": 2,
         "d": {
             "token": TOKEN,
@@ -62,16 +59,18 @@ async def identify(ws):
             "presence": {"status": STATUS, "afk": False},
             "compress": False,
         },
-    })
+    }
+    await op_send(ws, payload)
 
 async def set_custom_status(ws):
-    await op_send(ws, {
+    # OP 3 PRESENCE UPDATE (type 4 = Custom Status, chỉ có trên tài khoản user)
+    payload = {
         "op": 3,
         "d": {
             "since": 0,
             "activities": [
                 {
-                    "type": 4,   # Custom Status
+                    "type": 4,
                     "state": CUSTOM_STATUS,
                     "name": "Custom Status",
                     "id": "custom",
@@ -80,55 +79,68 @@ async def set_custom_status(ws):
             "status": STATUS,
             "afk": False,
         },
-    })
+    }
+    await op_send(ws, payload)
 
-async def heartbeat_loop(ws, interval_ms):
-    HEARTBEAT_PAYLOAD = {"op": 1, "d": None}  # CHỈ thế này thôi!
+async def heartbeat_loop(ws, interval_ms: int):
+    """Gửi heartbeat đều đặn. d phải là None (null), KHÔNG phải chuỗi 'None'."""
     try:
         while True:
             await asyncio.sleep(interval_ms / 1000)
-            await op_send(ws, HEARTBEAT_PAYLOAD)
+            await op_send(ws, {"op": 1, "d": None})
     except asyncio.CancelledError:
         pass
 
-async def gateway_loop():
+async def onliner():
+    """Kết nối gateway, identify, đặt custom status, chạy heartbeat + nhận sự kiện."""
     backoff = 1
     while True:
         try:
             async with websockets.connect(
                 GATEWAY_URL,
-                max_size=2**20,   # limit inbound 1MB (chuẩn)
+                max_size=2**20,      # inbound limit (1MB)
                 ping_interval=20,
                 ping_timeout=20,
             ) as ws:
                 # Nhận HELLO (OP 10)
                 hello = json.loads(await ws.recv())
-                hb_interval = hello["d"]["heartbeat_interval"]
+                heartbeat_interval = hello["d"]["heartbeat_interval"]
 
+                # Identify & đặt custom status
                 await identify(ws)
                 await set_custom_status(ws)
 
-                hb_task = asyncio.create_task(heartbeat_loop(ws, hb_interval))
-
+                # In thông tin đăng nhập
                 print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as "
-                      f"{Fore.LIGHTBLUE_EX}{username}{Fore.WHITE} ({userid}) – status: {STATUS}, custom: '{CUSTOM_STATUS}'")
+                      f"{Fore.LIGHTBLUE_EX}{username}{Fore.WHITE} ({userid}) – "
+                      f"status: {STATUS}, custom: '{CUSTOM_STATUS}'")
 
-                # Lắng nghe sự kiện nhưng KHÔNG gửi lại
+                # Chạy heartbeat song song
+                hb_task = asyncio.create_task(heartbeat_loop(ws, heartbeat_interval))
+
+                # Lắng nghe sự kiện từ gateway (KHÔNG gửi lại, KHÔNG in payload lớn)
                 async for _ in ws:
-                    # Bỏ qua để không phình log/payload
-                    pass
+                    pass  # giữ kết nối, không xử lý gì thêm
 
                 hb_task.cancel()
 
         except Exception as e:
             print(f"{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Gateway error: {e}")
 
+        # Reconnect với backoff
         await asyncio.sleep(backoff)
         backoff = min(backoff * 2, 60)
 
 async def main():
-    start_keep_alive()
-    await gateway_loop()
+    # Nếu bạn có hàm keep_alive() riêng để chạy web server healthcheck thì gọi ở đây
+    try:
+        keep_alive()
+    except Exception:
+        # Nếu không có hoặc không cần, bỏ qua
+        pass
+
+    # Xoá clear screen để log Railway không bị mất
+    await onliner()
 
 if __name__ == "__main__":
     asyncio.run(main())
