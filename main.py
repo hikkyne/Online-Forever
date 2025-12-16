@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import asyncio
 import platform
@@ -7,13 +6,12 @@ import random
 import requests
 import websockets
 from colorama import init, Fore
-from keep_alive import keep_alive  # Chạy nếu dùng Replit hoặc Railway, nếu không dùng thì có thể bỏ dòng này
 
 init(autoreset=True)
 
 status = "idle"  # online / dnd / idle
+ROTATE_DELAY = 30  # seconds
 
-# Danh sách custom status
 custom_status_list = [
   "(✿˘︶˘)♡ Your morning eyes, I could stare like watching stars",
   "(⌒‿⌒) u i a i i a o re i a a",
@@ -92,92 +90,89 @@ custom_status_list = [
   "(•́ ͜ʖ •̀) Will you be forever with me?",
   "(•́ ͜ʖ •̀) a i u i i a i i a u i",
 ]
-# Danh sách emoji (cả custom và unicode)
+
 emoji_list = [
-    {"name": ":omencatdancespray_valorant_gif_5:", "id": "1098605943777939456", "animated": True},
+    {"name": "omencatdancespray_valorant_gif_5", "id": "1098605943777939456", "animated": True},
 ]
 
-usertoken = os.getenv("TOKEN")
-if not usertoken:
-    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add a token inside Secrets.")
-    sys.exit()
+TOKEN = os.getenv("TOKEN")
+if not TOKEN:
+    print("Missing TOKEN")
+    exit()
 
-headers = {"Authorization": usertoken, "Content-Type": "application/json"}
+headers = {"Authorization": TOKEN}
+r = requests.get("https://discord.com/api/v9/users/@me", headers=headers)
+user = r.json()
+username = user["username"]
+userid = user["id"]
 
-validate = requests.get("https://canary.discordapp.com/api/v9/users/@me", headers=headers)
-if validate.status_code != 200:
-    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Your token might be invalid. Please check it again.")
-    sys.exit()
+async def heartbeat(ws, interval):
+    while True:
+        await asyncio.sleep(interval / 1000)
+        try:
+            await ws.send(json.dumps({"op": 1, "d": None}))
+        except:
+            break
 
-userinfo = validate.json()
-username = userinfo["username"]
-userid = userinfo["id"]
+async def rotate_status(ws):
+    index = 0
+    while True:
+        lyric = custom_status_list[index % len(custom_status_list)]
+        emoji = random.choice(emoji_list)
 
-async def onliner(token, status):
-    async with websockets.connect("wss://gateway.discord.gg/?v=9&encoding=json") as ws:
-        start = json.loads(await ws.recv())
-        heartbeat = start["d"]["heartbeat_interval"]
-
-        auth = {
-            "op": 2,
-            "d": {
-                "token": token,
-                "properties": {
-                    "$os": "Windows 10",
-                    "$browser": "Google Chrome",
-                    "$device": "Windows",
-                },
-                "presence": {"status": status, "afk": False},
-            },
-        }
-        await ws.send(json.dumps(auth))
-
-        # Random emoji
-        random_emoji = random.choice(emoji_list)
-        emoji_payload = (
-            random_emoji if random_emoji["id"]
-            else {"name": random_emoji["name"]}
-        )
-
-        cstatus = {
+        payload = {
             "op": 3,
             "d": {
                 "since": 0,
-                "activities": [
-                    {
-                        "type": 4,
-                        "state": "",
-                        "name": "Custom Status",
-                        "id": "custom",
-                        "emoji": emoji_payload,
-                    }
-                ],
+                "activities": [{
+                    "type": 4,
+                    "name": "Custom Status",
+                    "state": lyric,
+                    "emoji": emoji
+                }],
                 "status": status,
-                "afk": False,
-            },
+                "afk": False
+            }
         }
-        await ws.send(json.dumps(cstatus))
+
+        await ws.send(json.dumps(payload))
+        index += 1
+        await asyncio.sleep(ROTATE_DELAY)
+
+async def main():
+    os.system("cls" if platform.system() == "Windows" else "clear")
+    print(f"{Fore.GREEN}[+] Logged in as {username} ({userid})")
+
+    async with websockets.connect(
+        "wss://gateway.discord.gg/?v=9&encoding=json",
+        max_size=2**20
+    ) as ws:
+
+        hello = json.loads(await ws.recv())
+        interval = hello["d"]["heartbeat_interval"]
+
+        identify = {
+            "op": 2,
+            "d": {
+                "token": TOKEN,
+                "intents": 0,
+                "properties": {
+                    "$os": "windows",
+                    "$browser": "chrome",
+                    "$device": "pc"
+                },
+                "presence": {
+                    "status": status,
+                    "afk": False
+                }
+            }
+        }
+        await ws.send(json.dumps(identify))
+
+        asyncio.create_task(heartbeat(ws, interval))
+        asyncio.create_task(rotate_status(ws))
 
         while True:
-            await asyncio.sleep(heartbeat / 1000)
-            await ws.send(json.dumps({"op": 1, "d": None}))
+            await ws.recv()  # giữ socket sống
 
-async def run_onliner():
-    if platform.system() == "Windows":
-        os.system("cls")
-    else:
-        os.system("clear")
-    print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as {Fore.LIGHTBLUE_EX}{username} {Fore.WHITE}({userid})!")
-    await onliner(usertoken, status)
-    # index = 0
-    # while True:
-    #     current_status = custom_status_list[index % len(custom_status_list)]
-    #     try:
-    #         await onliner(usertoken, status, current_status)
-    #     except Exception as e:
-    #         print(f"{Fore.RED}[ERROR] {e}")
-    #     index += 1
-    #     await asyncio.sleep(30)  # đổi status mỗi 30 giây
-
-# keep_alive() 
-asyncio.run(run_onliner())
+asyncio.run(main())
