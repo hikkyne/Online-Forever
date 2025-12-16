@@ -1,230 +1,324 @@
 import os
+import sys
 import json
 import asyncio
+import platform
 import random
 import requests
 import websockets
+from colorama import init, Fore
+from keep_alive import keep_alive  # Chạy nếu dùng Replit hoặc Railway, nếu không dùng thì có thể bỏ dòng này
 
-# Configuration
-STATUS = os.getenv("STATUS", "idle")  # online / dnd / idle
-ROTATE_DELAY = int(os.getenv("ROTATE_DELAY", "30"))  # seconds
+init(autoreset=True)
 
-CUSTOM_STATUS_LIST = [
-    "(✿˘︶˘)♡ Your morning eyes, I could stare like watching stars",
-    "(⌒‿⌒) u i a i i a o re i a a",
-    ">w< I could walk you by, and I'll tell without a thought",
-    "(⌒‿⌒) u i u i i a u a i i",
-    "(つ﹏⊂) You'd be mine, would you mind if I took your hand tonight?",
-    "(＾◡＾)っ o re u i i a o re u i a",
-    "(⌒‿⌒) Know you're all that I want this life",
-    "(☆▽☆) i i i a i i u i a a",
-    " ₍^. .^₎⟆ ♪ u i ii a",
-    "(≧◡≦) I'll imagine we fell in love",
-    "(⁄ ⁄•⁄ω⁄•⁄ ⁄) u i u i a u i i i a a",
-    "(°◡°♡) I'll nap under moonlight skies with you",
-    "(｡•́︿•̀｡) i a i a u u i a i i",
-    "(⁄ ⁄>⁄ω⁄<⁄ ⁄) I think I'll picture us, you with the waves",
-    "(つ﹏⊂) a u i i o re o re i i a",
-    "(⌒ω⌒) The ocean's colors on your face",
-    "(•́ ͜ʖ •̀) u i u i i a i u i a",
-    "(づ｡◕‿‿◕｡)づ I'll leave my heart with your air",
-    "(((o(*ﾟ▽ﾟ*)o))) o re o re u i a a a i i",
-    ">w< So let me fly with you",
-    "(´｡• ω •｡) u u i a i i i a o re",
-    "(((o(*ﾟ▽ﾟ*)o))) Will you be forever with me?",
-    "(⌒‿⌒) u i a i u i i a i a",
-    " ₍^. .^₎⟆ ♪ u i ii a",
-    "(;´༎ຶД༎ຶ) My love will always stay by you",
-    "(｡•́︿•̀｡) i i i a u i a u a i",
-    "(•́ ͜ʖ •̀) I'll keep it safe, so don't you worry a thing",
-    "(つ﹏⊂) o re u i u i a o o a i a",
-    "(＾◡＾)っ I'll tell you I love you more",
-    "(⁄ ⁄•⁄ω⁄•⁄ ⁄) a a u i i a i i a u",
-    "(*≧ω≦) It's stuck with you forever, so promise you won't let it go",
-    "(☆▽☆) u i a i u i u i a i i a",
-    "(°ロ°)☝ I'll trust the universe will always bring me to you",
-    "(⌒ω⌒) u i o re u i u i a o re a",
-    " ₍^. .^₎⟆ ♪ u i ii a",
-    "ಥ‿ಥ I'll imagine we fell in love",
-    "(•́ ͜ʖ •̀) u i u i u i i a i i",
-    "( ´•̥̥̥ω•̥̥̥ ) I'll nap under moonlight skies with you",
-    "(≧◡≦) u u a i i o re o re i i",
-    "(☆▽☆) I think I'll picture us, you with the waves",
-    "(づ｡◕‿‿◕｡) a i i u i a o re u u i",
-    ">w< The ocean's colors on your face",
-    "(＾◡＾)っ u i a i u u u i a i",
-    "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ I'll leave my heart with your air",
-    "(つ﹏⊂) i a i a i a o re i i",
-    "(｡•́︿•̀｡) So let me fly with you",
-    "(⁄ ⁄>⁄ω⁄<⁄ ⁄) o re o re u i u i a a",
-    " ₍^. .^₎⟆ ♪ u i ii a",
-    "(•́ ͜ʖ •̀) Will you be forever with me?",
-    "(•́ ͜ʖ •̀) a i u i i a i i a u i",
+status = "idle"  # online / dnd / idle
+
+# Danh sách custom status
+custom_status_list = [
+"(≧◡≦)",
+">w<",
+"ಥ‿ಥ",
+"(つ﹏⊂)",
+"(•ˋ _ ˊ•)",
+"(>'-'<)",
+"(=^-ω-^=)",
+"(=①ω①=)",
+"(=｀ω´=)",
+"(=^･^=)",
+"(=ＴェＴ=)",
+"(=；ェ；=)",
+"(=｀ェ´=)",
+"(=^･ｪ･^=))ﾉ彡☆",
+"(=^-ｪ-^=)",
+"(=ΦｴΦ=)",
+"(ฅ^･ω･^ ฅ)",
+"(=ↀωↀ=)",
+"ฅ(•ㅅ•❀)ฅ",
+"ฅ^•ﻌ•^ฅ",
+"(＾・ω・＾)",
+"(=^-ω-^=)",
+"ヽ(=^･ω･^=)丿",
+"(=^-ω-^=)/",
+"(=^‥^=)",
+"(*^･ｪ･)ﾉ",
+"(●ↀωↀ●)",
+"(≚ᄌ≚)",
+"(=ノωヽ=)",
+"(￣ω￣;)",
+"(•̀ᴗ•́)و ̑̑",
+"(ノω<。)"
+  
+  # "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Ooooooooooooooo reeeeeeeeeeeeeee!!!",
+  # ">w< Oreoooooooooooooo reeeeeeeeeeeeeee~",
+  # "(つ﹏⊂) Oooooo... o re... oooooooooreeeee...",
+  # "(⌒‿⌒) Reeeeeeeeeeeeeeeeeeeee ooooooooooo!!",
+  # "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Ore? Oooooooooo... reeeeeeeee ;_;",
+  # "(≧◡≦) Reeeeeeeee oooooooooo ore oooooooo~",
+  # "(°◡°♡) Ore ore ore ore!",
+  # "(⁄ ⁄>⁄ω⁄<⁄ ⁄) O re re re re ~",
+  # ">///< Ore re o re re o re!",
+  # "(⌒ω⌒) Re ore re ore ~",
+  # "(づ｡◕‿‿◕｡)づ O re o re ore ore ^_^",
+  # ">w< Ore o re o re o re!",
+  # "(((o(*ﾟ▽ﾟ*)o))) Oreeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee!!",
+  # ">w< Oooooooooooooooooreeeeeeeeeeeeeeeeeee",
+  # "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Rere rere rereeeeeee oooooooooooo~",
+  # "ヾ(≧▽≦*)o Oooo reee oooo reee ore reeeee ooooo!",
+  # "(((φ(◎ロ◎;)φ))) Oooooooooooooooooooooooooooooooo reeeeeeeeeeeeeee!",
+  # "(;´༎ຶД༎ຶ`) Ore? Re? Oooooooo... reeeeeee...",
+  # "(⁄ ⁄>⁄ω⁄<⁄ ⁄) O re o re ooooooo reeeeeee ooooooo reeeee",
+  # "(•́ ͜ʖ •̀) Just a lil ooooooooooo reeeeeeeeeeeee for your soul",
+  # "(＾◡＾)っ Ore reeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee!! ooooooo!!",
+  # "(*≧ω≦) Reeeeeeeeeeeeeeeeeee ooooooooooooooo ore oreeeee!!",
+  # "(°ロ°)☝ Re re ore re, ore re?",
+  # "ಥ‿ಥ Ore... o re... ore re...",
+  # "( ´•̥̥̥ω•̥̥̥` ) Re ore o re, ore re re",
+  # "(つ﹏⊂) Ore re... o re...",
+  # "(☆▽☆) Ore ore, re re, ore o re!",
+  # ">w< O re! Ore? Re re!!",
+  # "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Ore o re ore re o re re!",
+  # "(｡•́︿•̀｡) Re... o re re... ore ore...",
+  # "(⌒‿⌒) Ore re ore re ore re ore re",
+  # "(*≧▽≦) Ooooooooooooore oooooooooooore reeeee~",
+  # "(｡♥‿♥｡) Ore ore oreeeeeeeeeeeeeeeeeeeeeee",
+  # "(╯°□°）╯︵ ┻━┻ Ooooooo reee ooooooo reee ooooooo",
+  # "ヽ(；▽；)ノ Reeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee!",
+  # "(灬º‿º灬) Oooooo reeeee oreeeeeeee~",
+  # "(╯°□°）╯︵ ┻━┻ Ore re?! Ore ore re re!!",
+  # "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Re ore re ore... o re!",
+  # "(°◡°♡) Ore, o re, re ore, ore re",
+  # "(ﾉ≧ڡ≦) Re o re o re ore o re o re re!!",
+ #   "(⁄ ⁄•⁄ω⁄•⁄ ⁄) Your morning eyes, I could stare like watching stars",
+ #  "(•́ ͜ʖ •̀) u i i a i i i a a i i",
+
+ #  ">w< I could walk you by, and I'll tell without a thought",
+ #  "(⌒‿⌒) u i u i i a u a i i",
+
+ #  "(つ﹏⊂) You'd be mine, would you mind if I took your hand tonight?",
+ #  "(＾◡＾)っ o re u i i a o re u i a",
+
+ #  "(⌒‿⌒) Know you're all that I want this life",
+ #  "(☆▽☆) i i i a i i u i a a",
+ # " ₍^. .^₎⟆  ♪  u i ii a",
+ #  "(≧◡≦) I'll imagine we fell in love",
+ #  "(⁄ ⁄•⁄ω⁄•⁄ ⁄) u i u i a u i i i a a",
+
+ #  "(°◡°♡) I'll nap under moonlight skies with you",
+ #  "(｡•́︿•̀｡) i a i a u u i a i i",
+
+ #  "(⁄ ⁄>⁄ω⁄<⁄ ⁄) I think I'll picture us, you with the waves",
+ #  "(つ﹏⊂) a u i i o re o re i i a",
+
+ #  "(⌒ω⌒) The ocean's colors on your face",
+ #  "(•́ ͜ʖ •̀) u i u i i a i u i a",
+
+ #  "(づ｡◕‿‿◕｡)づ I'll leave my heart with your air",
+ #  "(((o(*ﾟ▽ﾟ*)o))) o re o re u i a a a i i",
+
+ #  ">w< So let me fly with you",
+ #  "(´｡• ω •｡`) u u i a i i i a o re",
+
+ #  "(((o(*ﾟ▽ﾟ*)o))) Will you be forever with me?",
+ #  "(⌒‿⌒) u i a i u i i a i a",
+
+ #  " ₍^. .^₎⟆  ♪  u i ii a",
+ #  "(;´༎ຶД༎ຶ`) My love will always stay by you",
+ #  "(｡•́︿•̀｡) i i i a u i a u a i",
+
+ #  "(•́ ͜ʖ •̀) I'll keep it safe, so don't you worry a thing",
+ #  "(つ﹏⊂) o re u i u i a o o a i a",
+
+ #  "(＾◡＾)っ I'll tell you I love you more",
+ #  "(⁄ ⁄•⁄ω⁄•⁄ ⁄) a a u i i a i i a u",
+
+ #  "(*≧ω≦) It's stuck with you forever, so promise you won't let it go",
+ #  "(☆▽☆) u i a i u i u i a i i a",
+
+ #  "(°ロ°)☝ I'll trust the universe will always bring me to you",
+ #  "(⌒ω⌒) u i o re u i u i a o re a",
+
+ # " ₍^. .^₎⟆  ♪  u i ii a",
+ #  "ಥ‿ಥ I'll imagine we fell in love",
+ #  "(•́ ͜ʖ •̀) u i u i u i i a i i",
+
+ #  "( ´•̥̥̥ω•̥̥̥` ) I'll nap under moonlight skies with you",
+ #  "(≧◡≦) u u a i i o re o re i i",
+
+ #  "(☆▽☆) I think I'll picture us, you with the waves",
+ #  "(づ｡◕‿‿◕｡) a i i u i a o re u u i",
+
+ #  ">w< The ocean's colors on your face",
+ #  "(＾◡＾)っ u i a i u u u i a i",
+
+ #  "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ I'll leave my heart with your air",
+ #  "(つ﹏⊂) i a i a i a o re i i",
+
+ #  "(｡•́︿•̀｡) So let me fly with you",
+ #  "(⁄ ⁄>⁄ω⁄<⁄ ⁄) o re o re u i u i a a",
+ # " ₍^. .^₎⟆  ♪  u i ii a",
+ #  "(•́ ͜ʖ •̀) Will you be forever with me?",
+ #  "(•́ ͜ʖ •̀) a i u i i a i i a u i",
+]
+# custom_status_list = [
+#     " If you were to die tomorrow ^_^",
+#     " I could laugh and jump in from now on ;)",
+#     " But thinking about the time without us :-(",
+#     " Makes my heart ache unbearably (╯︵╰,)",
+#     " Sleepy eyes, pretending to be strong ^_^;",
+#     " Our voices turn sweet when we embrace (´｡• ᵕ •｡)",
+#     " Everything, everything, I want it just for me >w<",
+#     " It’s so hard, please… (ノ_<。)",
+#     " You're so unfair, so unfair, so unfair :-(",
+#     " Beautifully rotten within your selfishness :$",
+#     " Listen to the punishment, listen, listen (((φ(◎ロ◎;)φ)))",
+#     " Please, hold me gently, hold me gently ^.^",
+#     " I know it’s useless, but I want this love to myself :SB-)",
+#     " If someone else is thinking of you, I’ll crush it >:(",
+#     " Your likes, dislikes, and your soft hands (o^▽^o)",
+#     " The way you get mad when your face gets dirty >_<;",
+#     " I want all of you just for myself ~♥",
+#     " It hurts… please (つ﹏⊂)",
+#     " The love in you grew ugly (⚆_⚆)",
+#     " Listen, listen, listen, please ^_^",
+#     " Cry out fiercely, cry out fiercely ;-;",
+#     " I want to do everything, even the things I can’t say (>.<)",
+#     " Hit me with that cute expression of yours ^.~",
+#     " Break me… destroy me… >_<",
+#     " You’re so unfair… already ┐(︶▽︶)┌",
+#     " Please, hold me gently, again and again (⌒‿⌒)",
+#     " Break me… break me… you break me… (╯°□°）╯︵ ┻━┻",
+
+
+#     " Tatoeba kimi ga ashita shinu nara (´；д；)",
+#     " Boku wa ima kara waratte tobikomeru darou ^_^",
+#     " Futari igai no jikan o omou to (つ﹏⊂)",
+#     " Doushiyou mo nai hodo mune ga itakunaru yo ;_;",
+#     " Nemusou na me tsuyogaru kuse (>_<)",
+#     " Daki au toki wa amaku naru koe mo (⁄ ⁄•⁄ω⁄•⁄ ⁄)",
+#     " Zenbu zenbu mou boku dake ga ii ~♥",
+#     " Kurushii yo onegai (ノ_<。)",
+#     " Kimi wa zurui zurui zurui hito da mou >:(",
+#     " Wagamama na kimi no naka de kirei ni kusatta batsu (⚆_⚆)",
+#     " Kiite kiite kiite kiite kiite kiite yo (((φ(◎ロ◎;)φ)))",
+#     " Onegai yasashiku daite yasashiku daite (´｡• ᵕ •｡)",
+#     " Kono itoshisa o hitorijime shitai yo ^_~",
+#     " Kimi ga iru nara egao de tsubushite mawarou >:)",
+#     " Sukoshi marui te mo kawaii (っ´ω)っ",
+#     " Chotto okoru tokoro mo suki >_<;",
+#     " Aijou wa kimi no naka de minikuku sodatta na :-(",
+#     " Hageshiku naite hageshiku naite (T_T)",
+#     " Ienai koto mo zenbu shitai yo (つ﹏⊂)",
+#     " Kawaii sono hyoujou de boku o nagutte (⊃｡•́‿•̀｡)⊃",
+#     " Kowashite… kimi ga kowashite me >.<",
+
+    
+#     " Bình yên kia ơi ^.^",
+#     " Hãy khóc thay cho lòng tôi mỗi khi buồn ;-;",
+#     " Dẫu chẳng thể mua cho riêng mình một cảm giác _(:з)∠)_",
+#     " Để lòng mỗi ngày an yên ^_^",
+#     " Cất bước tìm nơi ấm áp tôi như một ánh sao không nhà (⚆_⚆)",
+#     " Ở nơi ấy chẳng có vội vã nhìn dòng người đi qua >_<",
+#     " Bên kia là nắng ^_~",
+#     " Có than trách ai bao giờ vậy mà ┑(￣Д ￣)┍",
+#     " Cuộc đời vẫn cứ thế lạnh lùng lướt qua :-(",
+#     " Yên bình có quá đắt không (((φ(◎ロ◎;)φ)))",
+#     " Mà sao cơn giông vội vã kéo đến phủ kín nát lòng :(",
+#     " Ngơ ngác choáng váng vì linh hồn ta hiếu động (•ˋ _ ˊ•)",
+#     " Về một thế giới mang tên cầu vồng ^.^",
+#     " Dòng thời gian lặng im thờ ơ :-|",
+#     " Về ngôi nhà ta muốn thu mình trong màn đêm つ﹏⊂",
+#     " Bao nhiêu là thêm là bớt cho nỗi niềm găm sâu vào tim (╥﹏╥)",
+#     " Bình yên ơi sao lại khó tìm >.<",
+#     " Bình yên ơi sao lại khó tìm đến vậy :-(",
+
+# ]
+
+# Danh sách emoji (cả custom và unicode)
+emoji_list = [
+    {"name": ":omencatdancespray_valorant_gif_5:", "id": "1098605943777939456", "animated": True},
 ]
 
-EMOJI_LIST = [
-    {"name": "omencatdancespray_valorant_gif_5", "id": "1339838482192928779", "animated": True},
-]
+usertoken = os.getenv("TOKEN")
+if not usertoken:
+    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add a token inside Secrets.")
+    sys.exit()
 
-TOKEN = os.getenv("TOKEN")
-if not TOKEN:
-    print("ERROR: Missing TOKEN environment variable")
-    exit(1)
+headers = {"Authorization": usertoken, "Content-Type": "application/json"}
 
+validate = requests.get("https://canary.discordapp.com/api/v9/users/@me", headers=headers)
+if validate.status_code != 200:
+    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Your token might be invalid. Please check it again.")
+    sys.exit()
 
-def get_user_info():
-    """Fetch user information from Discord API"""
-    try:
-        r = requests.get("https://discord.com/api/v9/users/@me", headers={"Authorization": TOKEN})
-        r.raise_for_status()
-        return r.json()
-    except Exception as e:
-        print(f"ERROR: Failed to fetch user info: {e}")
-        exit(1)
+userinfo = validate.json()
+username = userinfo["username"]
+userid = userinfo["id"]
 
+async def onliner(token, status):
+    async with websockets.connect("wss://gateway.discord.gg/?v=9&encoding=json") as ws:
+        start = json.loads(await ws.recv())
+        heartbeat = start["d"]["heartbeat_interval"]
 
-async def heartbeat(ws, interval):
-    """Send heartbeat to keep connection alive"""
-    while True:
-        try:
-            await asyncio.sleep(interval / 1000)
-            await ws.send(json.dumps({"op": 1, "d": None}))
-        except Exception as e:
-            print(f"Heartbeat error: {e}")
-            break
+        auth = {
+            "op": 2,
+            "d": {
+                "token": token,
+                "properties": {
+                    "$os": "Windows 10",
+                    "$browser": "Google Chrome",
+                    "$device": "Windows",
+                },
+                "presence": {"status": status, "afk": False},
+            },
+        }
+        await ws.send(json.dumps(auth))
 
+        # Random emoji
+        random_emoji = random.choice(emoji_list)
+        emoji_payload = (
+            random_emoji if random_emoji["id"]
+            else {"name": random_emoji["name"]}
+        )
 
-async def rotate_status(ws):
-    """Rotate custom status messages"""
-    index = 0
-    while True:
-        try:
-            lyric = CUSTOM_STATUS_LIST[index % len(CUSTOM_STATUS_LIST)]
-            emoji = random.choice(EMOJI_LIST)
-            
-            payload = {
-                "op": 3,
-                "d": {
-                    "since": 0,
-                    "activities": [{
+        cstatus = {
+            "op": 3,
+            "d": {
+                "since": 0,
+                "activities": [
+                    {
                         "type": 4,
+                        "state": "",
                         "name": "Custom Status",
-                        "state": lyric,
-                        "emoji": {
-                            "name": emoji["name"],
-                            "id": emoji["id"],
-                            "animated": emoji["animated"]
-                        }
-                    }],
-                    "status": STATUS,
-                    "afk": False
-                }
-            }
-            
-            await ws.send(json.dumps(payload))
-            print(f"Status updated: {lyric[:50]}...")  # Log để debug
-            index += 1
-            await asyncio.sleep(ROTATE_DELAY)
-            
-        except websockets.exceptions.ConnectionClosed:
-            print("WebSocket closed in rotate_status")
-            break
-        except Exception as e:
-            print(f"Error in rotate_status: {e}")
-            await asyncio.sleep(5)
-
-
-async def handle_events(ws):
-    """Handle incoming WebSocket events"""
-    try:
-        while True:
-            msg = await ws.recv()
-            # Xử lý message nếu cần, nhưng không break loop
-            data = json.loads(msg)
-            # Có thể log hoặc xử lý events ở đây nếu cần
-            if data.get("op") == 0:  # Dispatch event
-                event_type = data.get("t")
-                # print(f"Received event: {event_type}")  # Uncomment để debug
-    except websockets.exceptions.ConnectionClosed:
-        print("WebSocket closed in handle_events")
-    except Exception as e:
-        print(f"Error in handle_events: {e}")
-
-
-async def main():
-    """Main function to run the Discord status rotator"""
-    user = get_user_info()
-    print(f"Logged in as {user.get('username')} ({user.get('id')})")
-    print(f"Status rotation interval: {ROTATE_DELAY} seconds")
-    
-    retry_count = 0
-    
-    while retry_count < 999:  # Infinite retries for Railway
-        try:
-            async with websockets.connect(
-                "wss://gateway.discord.gg/?v=10&encoding=json",
-                max_size=10 * 1024 * 1024,
-                compression=None,
-                ping_interval=None,
-                ping_timeout=None
-            ) as ws:
-                print("WebSocket connected")
-                hello = json.loads(await ws.recv())
-                interval = hello["d"]["heartbeat_interval"]
-                print(f"Heartbeat interval: {interval}ms")
-                
-                identify = {
-                    "op": 2,
-                    "d": {
-                        "token": TOKEN,
-                        "intents": 0,
-                        "properties": {
-                            "$os": "linux",
-                            "$browser": "discord.py",
-                            "$device": "discord.py"
-                        },
-                        "presence": {
-                            "status": STATUS,
-                            "afk": False
-                        }
+                        "id": "custom",
+                        "emoji": emoji_payload,
                     }
-                }
-                
-                await ws.send(json.dumps(identify))
-                print("Identified with Discord")
-                
-                # Tạo tasks
-                heartbeat_task = asyncio.create_task(heartbeat(ws, interval))
-                rotate_task = asyncio.create_task(rotate_status(ws))
-                event_task = asyncio.create_task(handle_events(ws))
-                
-                # Chờ cho đến khi BẤT KỲ task nào bị lỗi/complete
-                done, pending = await asyncio.wait(
-                    [heartbeat_task, rotate_task, event_task],
-                    return_when=asyncio.FIRST_COMPLETED
-                )
-                
-                # Cancel các task còn lại
-                for task in pending:
-                    task.cancel()
-                    try:
-                        await task
-                    except asyncio.CancelledError:
-                        pass
-                
-                # Check xem task nào đã complete và có lỗi gì không
-                for task in done:
-                    try:
-                        task.result()
-                    except Exception as e:
-                        print(f"Task failed with error: {e}")
-                        
-        except Exception as e:
-            retry_count += 1
-            wait_time = min(2 ** retry_count, 60)
-            print(f"Connection lost: {e}. Retrying in {wait_time}s...")
-            await asyncio.sleep(wait_time)
+                ],
+                "status": status,
+                "afk": False,
+            },
+        }
+        await ws.send(json.dumps(cstatus))
 
+        while True:
+            await asyncio.sleep(heartbeat / 1000)
+            await ws.send(json.dumps({"op": 1, "d": None}))
 
-if __name__ == "__main__":
-    asyncio.run(main())
+async def run_onliner():
+    if platform.system() == "Windows":
+        os.system("cls")
+    else:
+        os.system("clear")
+    print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as {Fore.LIGHTBLUE_EX}{username} {Fore.WHITE}({userid})!")
+    await onliner(usertoken, status)
+    # index = 0
+    # while True:
+    #     current_status = custom_status_list[index % len(custom_status_list)]
+    #     try:
+    #         await onliner(usertoken, status, current_status)
+    #     except Exception as e:
+    #         print(f"{Fore.RED}[ERROR] {e}")
+    #     index += 1
+    #     await asyncio.sleep(30)  # đổi status mỗi 30 giây
+
+# keep_alive()  # Nếu không dùng host cần keep-alive (như Replit), bạn có thể comment dòng này
+asyncio.run(run_onliner())
