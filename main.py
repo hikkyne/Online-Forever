@@ -12,13 +12,25 @@ from datetime import datetime
 init(autoreset=True)
 
 status = "idle"
-ROTATE_DELAY = 15
+ROTATE_DELAY = 30
 
 custom_status_list = [
     "(つ﹏⊂) zzz",
     "(￣ω￣;)",
     "(•̀ᴗ•́)و ̑̑",
-    "(ノω<。)"
+    "(ノω<。)",
+    "(つ﹏⊂) zzzz",
+        "(つ﹏⊂) zzzz",
+        "(つ﹏⊂) zzzzz",
+        "(つ﹏⊂) zzzzzz",
+        "(つ﹏⊂) zzzzzz",
+        "(つ﹏⊂) zzzzzzz",
+        "(つ﹏⊂) zzzzzzzz",
+        "(つ﹏⊂) zzzzzzzzz",
+        "(つ﹏⊂) zzzzzzzzzz",
+        "(つ﹏⊂) zzzzzz",
+        "(つ﹏⊂) zzz",
+        "(つ﹏⊂) zz",
 ]
 
 emoji_list = [
