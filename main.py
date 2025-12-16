@@ -1,155 +1,183 @@
-# main.py
 import os
 import sys
 import json
 import asyncio
 import platform
+import random
 import requests
 import websockets
 from colorama import init, Fore
-from keep_alive import keep_alive  # nếu bạn đang dùng keep_alive riêng, giữ import này
+from keep_alive import keep_alive  # Chạy nếu dùng Replit hoặc Railway, nếu không dùng thì có thể bỏ dòng này
 
 init(autoreset=True)
 
-# ========= Cấu hình =========
-STATUS = "idle"                     # online | dnd | idle | invisible
-CUSTOM_STATUS = "Chơi vơi"               # custom status text (ngắn)
-GATEWAY_URL = "wss://gateway.discord.gg/?v=10&encoding=json"
-REST_BASE    = "https://discord.com/api/v9"
+status = "idle"  # online / dnd / idle
 
-# ========= Env =========
-TOKEN = os.getenv("TOKEN")
-EMOJI_ID = os.getenv("EMOJI_ID")  # <-- BẮT BUỘC có
-EMOJI_ANIMATED = os.getenv("EMOJI_ANIMATED", "false").lower() == "true"
+# Danh sách custom status
+custom_status_list = [
+  "(✿˘︶˘)♡ Your morning eyes, I could stare like watching stars",
+  "(⌒‿⌒) u i a i i a o re i a a",
 
-if not TOKEN:
-    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add TOKEN in environment variables.")
-    sys.exit(1)
-if not EMOJI_ID:
-    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add EMOJI_ID in environment variables.")
-    sys.exit(1)
+  ">w< I could walk you by, and I'll tell without a thought",
+  "(⌒‿⌒) u i u i i a u a i i",
 
-headers = {"Authorization": TOKEN, "Content-Type": "application/json"}
+  "(つ﹏⊂) You'd be mine, would you mind if I took your hand tonight?",
+  "(＾◡＾)っ o re u i i a o re u i a",
 
-# Validate token
-validate = requests.get(f"{REST_BASE}/users/@me", headers=headers)
+  "(⌒‿⌒) Know you're all that I want this life",
+  "(☆▽☆) i i i a i i u i a a",
+
+  " ₍^. .^₎⟆  ♪  u i ii a",
+
+  "(≧◡≦) I'll imagine we fell in love",
+  "(⁄ ⁄•⁄ω⁄•⁄ ⁄) u i u i a u i i i a a",
+
+  "(°◡°♡) I'll nap under moonlight skies with you",
+  "(｡•́︿•̀｡) i a i a u u i a i i",
+
+  "(⁄ ⁄>⁄ω⁄<⁄ ⁄) I think I'll picture us, you with the waves",
+  "(つ﹏⊂) a u i i o re o re i i a",
+
+  "(⌒ω⌒) The ocean's colors on your face",
+  "(•́ ͜ʖ •̀) u i u i i a i u i a",
+
+  "(づ｡◕‿‿◕｡)づ I'll leave my heart with your air",
+  "(((o(*ﾟ▽ﾟ*)o))) o re o re u i a a a i i",
+
+  ">w< So let me fly with you",
+  "(´｡• ω •｡`) u u i a i i i a o re",
+
+  "(((o(*ﾟ▽ﾟ*)o))) Will you be forever with me?",
+  "(⌒‿⌒) u i a i u i i a i a",
+
+  " ₍^. .^₎⟆  ♪  u i ii a",
+
+  "(;´༎ຶД༎ຶ`) My love will always stay by you",
+  "(｡•́︿•̀｡) i i i a u i a u a i",
+
+  "(•́ ͜ʖ •̀) I'll keep it safe, so don't you worry a thing",
+  "(つ﹏⊂) o re u i u i a o o a i a",
+
+  "(＾◡＾)っ I'll tell you I love you more",
+  "(⁄ ⁄•⁄ω⁄•⁄ ⁄) a a u i i a i i a u",
+
+  "(*≧ω≦) It's stuck with you forever, so promise you won't let it go",
+  "(☆▽☆) u i a i u i u i a i i a",
+
+  "(°ロ°)☝ I'll trust the universe will always bring me to you",
+  "(⌒ω⌒) u i o re u i u i a o re a",
+
+  " ₍^. .^₎⟆  ♪  u i ii a",
+
+  "ಥ‿ಥ I'll imagine we fell in love",
+  "(•́ ͜ʖ •̀) u i u i u i i a i i",
+
+  "( ´•̥̥̥ω•̥̥̥` ) I'll nap under moonlight skies with you",
+  "(≧◡≦) u u a i i o re o re i i",
+
+  "(☆▽☆) I think I'll picture us, you with the waves",
+  "(づ｡◕‿‿◕｡) a i i u i a o re u u i",
+
+  ">w< The ocean's colors on your face",
+  "(＾◡＾)っ u i a i u u u i a i",
+
+  "(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ I'll leave my heart with your air",
+  "(つ﹏⊂) i a i a i a o re i i",
+
+  "(｡•́︿•̀｡) So let me fly with you",
+  "(⁄ ⁄>⁄ω⁄<⁄ ⁄) o re o re u i u i a a",
+
+  " ₍^. .^₎⟆  ♪  u i ii a",
+
+  "(•́ ͜ʖ •̀) Will you be forever with me?",
+  "(•́ ͜ʖ •̀) a i u i i a i i a u i",
+]
+# Danh sách emoji (cả custom và unicode)
+emoji_list = [
+    {"name": ":omencatdancespray_valorant_gif_5:", "id": "1098605943777939456", "animated": True},
+]
+
+usertoken = os.getenv("TOKEN")
+if not usertoken:
+    print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Please add a token inside Secrets.")
+    sys.exit()
+
+headers = {"Authorization": usertoken, "Content-Type": "application/json"}
+
+validate = requests.get("https://canary.discordapp.com/api/v9/users/@me", headers=headers)
 if validate.status_code != 200:
     print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Your token might be invalid. Please check it again.")
-    sys.exit(1)
+    sys.exit()
 
 userinfo = validate.json()
-username = userinfo.get("username", "unknown")
-userid   = userinfo.get("id", "unknown")
+username = userinfo["username"]
+userid = userinfo["id"]
 
-# ========= Gateway helpers =========
-async def op_send(ws, payload: dict):
-    """Gửi payload an toàn (tránh >1MB)."""
-    data = json.dumps(payload, separators=(",", ":"))
-    if len(data) > 800_000:
-        print(f"{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Blocked oversized payload len={len(data)}")
-        return
-    await ws.send(data)
+async def onliner(token, status):
+    async with websockets.connect("wss://gateway.discord.gg/?v=9&encoding=json") as ws:
+        start = json.loads(await ws.recv())
+        heartbeat = start["d"]["heartbeat_interval"]
 
-async def identify(ws):
-    # OP 2 IDENTIFY
-    payload = {
-        "op": 2,
-        "d": {
-            "token": TOKEN,
-            "properties": {
-                "$os": platform.system(),
-                "$browser": "chrome",
-                "$device": "desktop",
+        auth = {
+            "op": 2,
+            "d": {
+                "token": token,
+                "properties": {
+                    "$os": "Windows 10",
+                    "$browser": "Google Chrome",
+                    "$device": "Windows",
+                },
+                "presence": {"status": status, "afk": False},
             },
-            "presence": {"status": STATUS, "afk": False},
-            "compress": False,
-        },
-    }
-    await op_send(ws, payload)
+        }
+        await ws.send(json.dumps(auth))
 
-async def set_custom_status(ws):
-    # OP 3 PRESENCE UPDATE (type 4 = Custom Status)
-    # Với emoji custom: chỉ dùng ID; "name" để None (null). Nếu emoji animated, đặt animated=True.
-    payload = {
-        "op": 3,
-        "d": {
-            "since": 0,
-            "activities": [
-                {
-                    "type": 4,
-                    "state": CUSTOM_STATUS,
-                    "name": "Custom Status",
-                    "id": "custom",
-                    "emoji": {
-                        "name": None,                # không cần name, chỉ dùng id
-                        "id": EMOJI_ID,              # <-- ID emoji custom
-                        "animated": EMOJI_ANIMATED,  # true nếu là <a:...:id>
-                    },
-                }
-            ],
-            "status": STATUS,
-            "afk": False,
-        },
-    }
-    await op_send(ws, payload)
+        # Random emoji
+        random_emoji = random.choice(emoji_list)
+        emoji_payload = (
+            random_emoji if random_emoji["id"]
+            else {"name": random_emoji["name"]}
+        )
 
-async def heartbeat_loop(ws, interval_ms: int):
-    """Gửi heartbeat đều đặn. d phải là None (null)."""
-    try:
+        cstatus = {
+            "op": 3,
+            "d": {
+                "since": 0,
+                "activities": [
+                    {
+                        "type": 4,
+                        "state": "",
+                        "name": "Custom Status",
+                        "id": "custom",
+                        "emoji": emoji_payload,
+                    }
+                ],
+                "status": status,
+                "afk": False,
+            },
+        }
+        await ws.send(json.dumps(cstatus))
+
         while True:
-            await asyncio.sleep(interval_ms / 1000)
-            await op_send(ws, {"op": 1, "d": None})
-    except asyncio.CancelledError:
-        pass
+            await asyncio.sleep(heartbeat / 1000)
+            await ws.send(json.dumps({"op": 1, "d": None}))
 
-async def onliner():
-    """Kết nối gateway, identify, đặt custom status, chạy heartbeat + nhận sự kiện."""
-    backoff = 1
-    while True:
-        try:
-            async with websockets.connect(
-                GATEWAY_URL,
-                max_size=2**20,      # inbound limit (1MB)
-                ping_interval=20,
-                ping_timeout=20,
-            ) as ws:
-                # Nhận HELLO (OP 10)
-                hello = json.loads(await ws.recv())
-                heartbeat_interval = hello["d"]["heartbeat_interval"]
+async def run_onliner():
+    if platform.system() == "Windows":
+        os.system("cls")
+    else:
+        os.system("clear")
+    print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as {Fore.LIGHTBLUE_EX}{username} {Fore.WHITE}({userid})!")
+    await onliner(usertoken, status)
+    # index = 0
+    # while True:
+    #     current_status = custom_status_list[index % len(custom_status_list)]
+    #     try:
+    #         await onliner(usertoken, status, current_status)
+    #     except Exception as e:
+    #         print(f"{Fore.RED}[ERROR] {e}")
+    #     index += 1
+    #     await asyncio.sleep(30)  # đổi status mỗi 30 giây
 
-                # Identify & đặt custom status
-                await identify(ws)
-                await set_custom_status(ws)
-
-                print(
-                    f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Logged in as "
-                    f"{Fore.LIGHTBLUE_EX}{username}{Fore.WHITE} ({userid}) – "
-                    f"status: {STATUS}, custom: '{CUSTOM_STATUS}', emoji_id: {EMOJI_ID}, animated={EMOJI_ANIMATED}"
-                )
-
-                # Chạy heartbeat song song
-                hb_task = asyncio.create_task(heartbeat_loop(ws, heartbeat_interval))
-
-                # Lắng nghe sự kiện từ gateway (KHÔNG gửi lại, KHÔNG in payload lớn)
-                async for _ in ws:
-                    pass
-
-                hb_task.cancel()
-
-        except Exception as e:
-            print(f"{Fore.WHITE}[{Fore.RED}!{Fore.WHITE}] Gateway error: {e}")
-
-        # Reconnect với backoff
-        await asyncio.sleep(backoff)
-        backoff = min(backoff * 2, 60)
-
-async def main():
-    try:
-        keep_alive()  # nếu bạn có web healthcheck riêng
-    except Exception:
-        pass
-
-    await onliner()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+# keep_alive() 
+asyncio.run(run_onliner())
