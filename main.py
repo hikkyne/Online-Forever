@@ -63,7 +63,7 @@ CUSTOM_STATUS_LIST = [
 ]
 
 EMOJI_LIST = [
-    {"name": "omencatdancespray_valorant_gif_5", "id": "1098605943777939456", "animated": True},
+    {"name": "omencatdancespray_valorant_gif_5", "id": "1339838482192928779", "animated": True},
 ]
 
 TOKEN = os.getenv("TOKEN")
@@ -89,7 +89,8 @@ async def heartbeat(ws, interval):
         try:
             await asyncio.sleep(interval / 1000)
             await ws.send(json.dumps({"op": 1, "d": None}))
-        except:
+        except Exception as e:
+            print(f"Heartbeat error: {e}")
             break
 
 
@@ -121,12 +122,15 @@ async def rotate_status(ws):
             }
             
             await ws.send(json.dumps(payload))
+            print(f"Status updated: {lyric[:50]}...")  # Log để debug
             index += 1
             await asyncio.sleep(ROTATE_DELAY)
             
         except websockets.exceptions.ConnectionClosed:
+            print("WebSocket closed in rotate_status")
             break
-        except Exception:
+        except Exception as e:
+            print(f"Error in rotate_status: {e}")
             await asyncio.sleep(5)
 
 
@@ -134,15 +138,24 @@ async def handle_events(ws):
     """Handle incoming WebSocket events"""
     try:
         while True:
-            await ws.recv()
-    except:
-        pass
+            msg = await ws.recv()
+            # Xử lý message nếu cần, nhưng không break loop
+            data = json.loads(msg)
+            # Có thể log hoặc xử lý events ở đây nếu cần
+            if data.get("op") == 0:  # Dispatch event
+                event_type = data.get("t")
+                # print(f"Received event: {event_type}")  # Uncomment để debug
+    except websockets.exceptions.ConnectionClosed:
+        print("WebSocket closed in handle_events")
+    except Exception as e:
+        print(f"Error in handle_events: {e}")
 
 
 async def main():
     """Main function to run the Discord status rotator"""
     user = get_user_info()
     print(f"Logged in as {user.get('username')} ({user.get('id')})")
+    print(f"Status rotation interval: {ROTATE_DELAY} seconds")
     
     retry_count = 0
     
@@ -155,8 +168,10 @@ async def main():
                 ping_interval=None,
                 ping_timeout=None
             ) as ws:
+                print("WebSocket connected")
                 hello = json.loads(await ws.recv())
                 interval = hello["d"]["heartbeat_interval"]
+                print(f"Heartbeat interval: {interval}ms")
                 
                 identify = {
                     "op": 2,
@@ -176,23 +191,38 @@ async def main():
                 }
                 
                 await ws.send(json.dumps(identify))
+                print("Identified with Discord")
                 
+                # Tạo tasks
                 heartbeat_task = asyncio.create_task(heartbeat(ws, interval))
                 rotate_task = asyncio.create_task(rotate_status(ws))
                 event_task = asyncio.create_task(handle_events(ws))
                 
+                # Chờ cho đến khi BẤT KỲ task nào bị lỗi/complete
                 done, pending = await asyncio.wait(
                     [heartbeat_task, rotate_task, event_task],
                     return_when=asyncio.FIRST_COMPLETED
                 )
                 
+                # Cancel các task còn lại
                 for task in pending:
                     task.cancel()
+                    try:
+                        await task
+                    except asyncio.CancelledError:
+                        pass
+                
+                # Check xem task nào đã complete và có lỗi gì không
+                for task in done:
+                    try:
+                        task.result()
+                    except Exception as e:
+                        print(f"Task failed with error: {e}")
                         
         except Exception as e:
             retry_count += 1
             wait_time = min(2 ** retry_count, 60)
-            print(f"Connection lost. Retrying in {wait_time}s...")
+            print(f"Connection lost: {e}. Retrying in {wait_time}s...")
             await asyncio.sleep(wait_time)
 
 
