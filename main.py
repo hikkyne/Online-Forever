@@ -35,7 +35,7 @@ if not usertoken:
 
 headers = {"Authorization": usertoken, "Content-Type": "application/json"}
 
-validate = requests.get("[https://canary.discordapp.com/api/v9/users/@me](https://canary.discordapp.com/api/v9/users/@me)", headers=headers)
+validate = requests.get("https://canary.discordapp.com/api/v9/users/@me", headers=headers)
 if validate.status_code != 200:
     print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] Your token might be invalid. Please check it again.")
     sys.exit()
@@ -251,4 +251,13 @@ async def run_onliner():
     print(f"{Fore.LIGHTGREEN_EX}Discord Status Rotator")
     print(f"{Fore.LIGHTCYAN_EX}{'='*60}\n")
     print(f"{Fore.WHITE}User: {Fore.LIGHTBLUE_EX}{username} {Fore.LIGHTBLACK_EX}({userid})")
-    print(f"{Fore.WHITE}Rotation Interval: {Fore.LIGHTBLUE_EX}{ROTATE_DELAY}
+    print(f"{Fore.WHITE}Rotation Interval: {Fore.LIGHTBLUE_EX}{ROTATE_DELAY}s")
+    print(f"{Fore.WHITE}Total Statuses: {Fore.LIGHTBLUE_EX}{len(custom_status_list)}")
+    print(f"{Fore.LIGHTCYAN_EX}{'='*60}\n")
+    
+    await onliner(usertoken, status)
+
+
+if __name__ == "__main__":
+    # keep_alive()
+    asyncio.run(run_onliner())
