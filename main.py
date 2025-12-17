@@ -7,20 +7,21 @@ from colorama import init, Fore
 
 init(autoreset=True)
 
-# Configuration
-STATUS = "idle"  # online/dnd/idle
-CUSTOM_STATUS_TEXT = "zzzz"
-EMOJI_ID = "1368069418428665958"
-EMOJI_NAME = ":aPeepo_Sleep:"
-EMOJI_ANIMATED = True
-
-# Get token from environment
+# ===== CONFIGURATION FROM ENVIRONMENT VARIABLES =====
+# Get token from environment (REQUIRED)
 usertoken = os.getenv("TOKEN")
 if not usertoken:
     print(f"{Fore.WHITE}[{Fore.RED}-{Fore.WHITE}] TOKEN environment variable not set.")
     sys.exit(1)
 
-headers = {"Authorization": usertoken, "Content-Type": "application/json"}
+# Status configuration (with defaults)
+STATUS = os.getenv("STATUS", "idle")  # online/dnd/idle
+CUSTOM_STATUS_TEXT = os.getenv("CUSTOM_STATUS_TEXT", ":v ;v")
+
+# Emoji configuration (with defaults)
+EMOJI_ID = os.getenv("EMOJI_ID", "1368069418428665958")
+EMOJI_NAME = os.getenv("EMOJI_NAME", ":aPeepo_Sleep:")
+EMOJI_ANIMATED = os.getenv("EMOJI_ANIMATED", "true").lower() in ("true", "1", "yes")
 
 
 async def maintain_presence(token, status):
@@ -97,9 +98,14 @@ async def maintain_presence(token, status):
 
 async def main():
     """Main loop with auto-reconnect."""
-    print(f"{Fore.WHITE}[{Fore.LIGHTGREEN_EX}+{Fore.WHITE}] Discord Status Bot Started")
-    print(f"{Fore.WHITE}[{Fore.LIGHTBLUE_EX}*{Fore.WHITE}] Status: {STATUS}")
-    print(f"{Fore.WHITE}[{Fore.LIGHTBLUE_EX}*{Fore.WHITE}] Custom Status: {CUSTOM_STATUS_TEXT}")
+    print(f"\n{Fore.LIGHTCYAN_EX}{'='*60}")
+    print(f"{Fore.LIGHTGREEN_EX}Discord Status Bot")
+    print(f"{Fore.LIGHTCYAN_EX}{'='*60}\n")
+    print(f"{Fore.WHITE}Status: {Fore.LIGHTBLUE_EX}{STATUS}")
+    print(f"{Fore.WHITE}Custom Status: {Fore.LIGHTBLUE_EX}{CUSTOM_STATUS_TEXT}")
+    print(f"{Fore.WHITE}Emoji: {Fore.LIGHTBLUE_EX}{EMOJI_NAME} (ID: {EMOJI_ID})")
+    print(f"{Fore.WHITE}Animated: {Fore.LIGHTBLUE_EX}{EMOJI_ANIMATED}")
+    print(f"{Fore.LIGHTCYAN_EX}{'='*60}\n")
     
     while True:
         try:
