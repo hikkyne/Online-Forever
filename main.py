@@ -19,9 +19,9 @@ STATUS = os.getenv("STATUS", "idle")  # online/dnd/idle
 CUSTOM_STATUS_TEXT = os.getenv("CUSTOM_STATUS_TEXT", " ")
 
 # Emoji configuration (with defaults)
-EMOJI_ID = os.getenv("EMOJI_ID", "1368069418428665958")
-EMOJI_NAME = os.getenv("EMOJI_NAME", ":aPeepo_Sleep:")
-EMOJI_ANIMATED = os.getenv("EMOJI_ANIMATED", "true").lower() in ("true", "1", "yes")
+EMOJI_ID = os.getenv("EMOJI_ID", "736377076503937044")
+EMOJI_NAME = os.getenv("EMOJI_NAME", ":yunachorr:")
+EMOJI_ANIMATED = os.getenv("EMOJI_ANIMATED", "false").lower() in ("true", "1", "yes")
 
 
 async def maintain_presence(token, status):
