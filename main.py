@@ -16,7 +16,7 @@ if not usertoken:
 
 # Status configuration (with defaults)
 STATUS = os.getenv("STATUS", "idle")  # online/dnd/idle
-CUSTOM_STATUS_TEXT = os.getenv("CUSTOM_STATUS_TEXT", ":v ;v")
+CUSTOM_STATUS_TEXT = os.getenv("CUSTOM_STATUS_TEXT", "")
 
 # Emoji configuration (with defaults)
 EMOJI_ID = os.getenv("EMOJI_ID", "1368069418428665958")
